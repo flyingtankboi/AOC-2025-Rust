@@ -50,9 +50,9 @@ fn is_valid2(id : i64) -> bool {
 // For tests
 fn main(){
     let path = "inputs/day2/final.txt";
-    let mut input = read_to_string(path).expect("Couldn't read file");
+    let input = read_to_string(path).expect("Couldn't read file");
 
-    println!("{:?}", day2(&mut input));
+    println!("{:?}", day2(&input));
 }
 
 

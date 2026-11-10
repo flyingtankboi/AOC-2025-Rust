@@ -28,9 +28,7 @@ fn find_max_n(lines: &str, n: usize) -> u64 {
 
         result = result*10 + u64::from(max - b'0');
 
-        if shift != 0 {
-            shift = shift-1;
-        }
+        shift = shift.saturating_sub(1);
         start = start+index+1;
     }
     result

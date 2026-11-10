@@ -22,7 +22,7 @@ fn day2(input : &str)-> (i64,i64){
 
 fn is_invalid1(id : i64) -> bool {
     let id_str = id.to_string();
-    if id_str.len()%2 != 0 {return false}
+    if !id_str.len().is_multiple_of(2) {return false}
     let (left, right) = id_str.split_at(id_str.len()/2);
     left == right
 }
@@ -34,7 +34,7 @@ fn is_invalid2(id : i64) -> bool {
     // For diffrent pattern lengths
     (1 ..= id_bytes.len()/2).any( |pattern_len| {
         // prune
-        if id_bytes.len()%pattern_len != 0 {return false}
+        if !id_bytes.len().is_multiple_of(pattern_len) {return false}
         // check pattern with chunks
         let pattern = &id_bytes[0..pattern_len];
         id_bytes.chunks(pattern_len).all(|b| b == pattern)
