@@ -14,7 +14,6 @@ fn day5(input : &str)-> (u64, u64){
             None => panic!("No delimiter -"),
         };
 
-        // set.insert((low, high)); part 1
         // Smart insert by combining
         let touching : Vec<(u64, u64)> =  set.iter().filter(|&&(lo,hi)| {
             (lo ..= hi).contains(&low) || (lo ..= hi).contains(&high) || (low < lo && high > hi)
@@ -22,7 +21,6 @@ fn day5(input : &str)-> (u64, u64){
 
         let mut max_high = high;
         let mut min_low = low;
-        // dbg!(&set,(low,high), &touching);
         for (parent_low, parent_high) in touching {
             set.remove(&(parent_low, parent_high));
             max_high = max(max_high, parent_high);
@@ -30,27 +28,13 @@ fn day5(input : &str)-> (u64, u64){
         }
 
         set.insert((min_low, max_high));
-        // dbg!(&set);
-
-        // let _ = match ((parent_low ..= parent_high).contains(&low), (parent_low ..= parent_high).contains(&high)){
-        //     (true, false) => set.insert((parent_low,high)),
-        //     (false, true) => set.insert((low,parent_high)),
-        //     (false, false) => set.insert((low,high)),
-        //     (true, true) => set.insert((parent_low, parent_high)),
-        // };
-
-
-
     }
-
-    // Here I thought i would need an input_iter.next() to throw away the "" but id didnt work and apparently I didnt need it
 
     // Parse ingredients
     for line in input_iter {
         let x : u64 = line.trim().parse().expect("Not an int");
         result1 += set.iter().any(|&(lo,hi)| (lo ..= hi).contains(&x)) as u64;
     }
-    // dbg!(&set);
     let result2 = set.iter().map(|&(lo, hi)| hi-lo+1).sum();
 
     (result1, result2)
