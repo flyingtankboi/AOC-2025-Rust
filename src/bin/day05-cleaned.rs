@@ -31,10 +31,11 @@ fn day5(input : &str)-> (u64, u64){
     }
 
     // Parse ingredients
-    for line in input_iter {
-        let x : u64 = line.trim().parse().expect("Not an int");
-        result1 += set.iter().any(|&(lo,hi)| (lo ..= hi).contains(&x)) as u64;
-    }
+    result1 += input_iter.map(|line| line.trim().parse().expect("Not an int"))
+    .filter(|&x|  set.iter().any(|&(lo,hi)| (lo ..= hi).contains(&x)))
+    .count() as u64;
+
+
     let result2 = set.iter().map(|&(lo, hi)| hi-lo+1).sum();
 
     (result1, result2)
