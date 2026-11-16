@@ -1,4 +1,3 @@
-use core::panic;
 use std::{fs::read_to_string};
 
 
@@ -19,6 +18,13 @@ impl Op {
             Op::Prod => 1,
         }
     } 
+
+    fn apply(&self, acc : i64, n : i64) -> i64 {
+        match self {
+            Op::Sum  =>  acc + n,
+            Op::Prod =>  acc * n,
+        }
+    }
 }
 
 
@@ -41,10 +47,7 @@ fn day6(input : &str)-> (i64, i64){
         // Results 1 
         for (i,number_str) in line.split_whitespace().enumerate() {
             let number : i64 = number_str.parse().expect("Not an int");
-            match operators[i].1 {
-                Op::Sum  =>  running_results1[i] += number,
-                Op::Prod =>  running_results1[i] *= number,
-            }
+            running_results1[i] = operators[i].1.apply(running_results1[i], number);
         }
     }
 
@@ -54,10 +57,7 @@ fn day6(input : &str)-> (i64, i64){
         let column_temp : Vec<u8> = input_lines.iter().filter_map(|&line| line.as_bytes().get(i)).copied().collect();
         let column = String::from_utf8(column_temp).expect("Not UTF8");
         if let Ok(number) = column.trim().parse::<i64>() {
-            match operators[operation_index].1 {
-                Op::Sum  =>  running_results2[operation_index] += number,
-                Op::Prod =>  running_results2[operation_index] *= number,
-            }
+            running_results2[operation_index] = operators[operation_index].1.apply(running_results2[operation_index], number);
         } else {
             operation_index += 1;
         }
