@@ -48,12 +48,11 @@ fn day7(input : &str)-> (i64,i64){
     loop {
         let mut to_add = Vec::new(); 
         for (i,j) in rays.drain() { // clears the rays so we keep only the current one
-            to_add.clear();
             if let Some(_) = map.get(&Block::Splitter(i+1,j)) { // splitter beneeth
                 result1 += 1;
                 to_add.push((i+1, j-1)); //left
                 to_add.push((i+1, j+1)); //right
-            } else if i-1 == floor_i  { // floor beneeth
+            } else if i+1 == floor_i  { // floor beneeth
                 continue
             } else { // spread
                 to_add.push((i+1,j));
