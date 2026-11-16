@@ -2,7 +2,7 @@ use std::{fs::read_to_string, iter};
 
 fn day6(input : &str)-> (i64, i64){
 
-    let mut input_it = input.trim().lines().rev();
+    let mut input_it = input.lines().rev();
     let operators : Vec<(usize,char)> = input_it.next()
                                                 .expect("Empty input")
                                                 .chars()
@@ -41,7 +41,7 @@ fn day6(input : &str)-> (i64, i64){
 
 
         // Results 1 
-        for (i,number_str) in line.trim().split_whitespace().enumerate() {
+        for (i,number_str) in line.split_whitespace().enumerate() {
             let number : i64 = number_str.parse().expect("Not an int");
             match operators[i].1 {
                 '+' =>  running_results1[i] += number,
