@@ -8,38 +8,34 @@ fn day9(input : &str)-> (i64,i64){
         let (x,y) : (i64,i64) = (x_s.parse().expect("Not an int"), y_s.parse().expect("Not an int"));
         (x,y)
     }).collect();
-    let mut convex_hull = coords.clone();
-    convex_hull.push(coords[0]);
+    let mut hull = coords.clone();
+    hull.push(coords[0]);
     coords.sort();
 
     // Complete convex hull sides
-    let mut convex_hull_set = HashSet::new();
-    for coord_packed in convex_hull.windows(2) {
+    let mut hull_set = HashSet::new();
+    for coord_packed in hull.windows(2) {
         if let &[coord1,coord2] = coord_packed {
             for dx in min(coord1.0,coord2.0)..= max(coord1.0,coord2.0) {
                 for dy in min(coord1.1,coord2.1)..=max(coord1.1,coord2.1){
-                    convex_hull_set.insert((dx,dy));
+                    hull_set.insert((dx,dy));
 
-                    //print_hull(&convex_hull_set);
                 }
             }
         }
     }
-    //print_hull(&convex_hull_set);
 
     // result 1 
     let mut result1 = 0;
     let mut result2 = 0;
     for i in 0..coords.len() {
+        //println!("{i}");
         for j in (i+1)..coords.len() {
-            //dbg!(&coords[i], &coords[j]);
-            let dx = (coords[j].0 - coords[i].0 + 1).abs();
-            let dy = (coords[j].1 - coords[i].1 + 1).abs();
-            //dbg!(dx*dy);
+            //dbg!(j);
+            let dx = (coords[j].0 - coords[i].0).abs() + 1;
+            let dy = (coords[j].1 - coords[i].1).abs() + 1;
             result1 = result1.max(dx*dy);
-            //dbg!(coords[i], coords[j]);
-            // print_hull(&convex_hull_set);
-            if !area_is_out_of_hull(coords[i], coords[j], &convex_hull_set) {
+            if !area_is_out_of_hull(coords[i], coords[j], &hull) {
                 result2 = result2.max(dx*dy);
             }
         }
@@ -47,46 +43,81 @@ fn day9(input : &str)-> (i64,i64){
 
     (result1,result2)
 }
+fn area_is_out_of_hull(coord1: (i64, i64),coord2: (i64, i64),hull_ordered: &[(i64, i64)]) -> bool {
+    let min_x = min(coord1.0, coord2.0);
+    let max_x = max(coord1.0, coord2.0);
+    let min_y = min(coord1.1, coord2.1);
+    let max_y = max(coord1.1, coord2.1);
 
-fn area_is_out_of_hull(coord1: (i64,i64), coord2 : (i64,i64), hull : &HashSet<(i64,i64)>) -> bool {
-    // Go through the border and check if in or out
-    let x_range = min(coord1.0, coord2.0)..=max(coord1.0, coord2.0);
-    let y_range = min(coord1.1, coord2.1)..=max(coord1.1, coord2.1);
-
-    let horizontal = x_range.clone().zip(iter::repeat(coord1.1))
-        .chain(x_range.zip(iter::repeat(coord2.1)));
-
-    let vertical = iter::repeat(coord1.0).zip(y_range.clone())
-        .chain(iter::repeat(coord2.0).zip(y_range));
-
-    let mut border = horizontal.chain(vertical);
-    let temp = border.any(|coord| point_is_out(coord, hull));
-    dbg!(coord1, coord2, temp);
-    temp
-}
-
-fn point_is_out(coord : (i64,i64), hull : &HashSet<(i64,i64)>) -> bool {
-    // check if on border or shoot ray left and count
-    dbg!(coord);
-    if hull.contains(&coord) {
-        dbg!(false);
-        false
-    } else {
-
-        let mut count = 0;
-        let mut ray = coord;
-        while ray.0 > 0 {
-            if hull.contains(&ray) {
-                count += 1;
-            }
-            ray.0 -= 1;
-        }
-        dbg!(count%2==0);
-        count%2 == 0
+    // 1. All 4 corners must be inside or on the border of the hull
+    let corners = [
+        (min_x, min_y),
+        (min_x, max_y),
+        (max_x, min_y),
+        (max_x, max_y),
+    ];
+    if corners.iter().any(|&c| point_is_out(c, hull_ordered)) {
+        return true;
     }
+
+    // 2. Check that no hull edge cuts through the strict interior of the rectangle
+    let n = hull_ordered.len()-1;
+    for i in 0..n {
+        let (x1, y1) = hull_ordered[i];
+        let (x2, y2) = hull_ordered[i + 1];
+
+        let edge_min_x = min(x1, x2);
+        let edge_max_x = max(x1, x2);
+        let edge_min_y = min(y1, y2);
+        let edge_max_y = max(y1, y2);
+
+        if x1 == x2 {
+            // Vertical hull edge: cuts through if its X is strictly inside (min_x, max_x)
+            // and its Y-span overlaps the rectangle's Y-span (min_y, max_y)
+            if x1 > min_x && x1 < max_x && edge_max_y > min_y && edge_min_y < max_y {
+                return true;
+            }
+        } else if y1 == y2 {
+            // Horizontal hull edge: cuts through if its Y is strictly inside (min_y, max_y)
+            // and its X-span overlaps the rectangle's X-span (min_x, max_x)
+            if y1 > min_y && y1 < max_y && edge_max_x > min_x && edge_min_x < max_x {
+                return true;
+            }
+        }
+    }
+
+    false
 }
 
-fn print_hull(hull : &HashSet<(i64,i64)>) {
+fn point_is_out(coord: (i64, i64), vertices: &[(i64, i64)]) -> bool {
+    let (px, py) = coord;
+    let mut inside = false;
+    let n = vertices.len();
+
+    for i in 0..n {
+        let (x1, y1) = vertices[i];
+        let (x2, y2) = vertices[(i + 1) % n];
+
+        // 1. Check if on an orthogonal border segment
+        if x1 == x2 && px == x1 && py >= y1.min(y2) && py <= y1.max(y2) {
+            return false;
+        }
+        if y1 == y2 && py == y1 && px >= x1.min(x2) && px <= x1.max(x2) {
+            return false;
+        }
+
+        // 2. Half-open ray casting check (shooting ray left)
+        if (y1 > py) != (y2 > py) {
+            if px > x1 {
+                inside = !inside;
+            }
+        }
+    }
+
+    !inside
+}
+
+fn print_hull(hull : &HashSet<(i64,i64)>, mark : Vec<(i64,i64)>) {
     println!("=={}==", hull.len());
     print!("  ");
     for k in 0..20 {print!("{k} ")}
@@ -94,7 +125,9 @@ fn print_hull(hull : &HashSet<(i64,i64)>) {
     for i in 0..20 {
         print!("{i} ");
         for j in 0..20 {
-            if hull.contains(&(i as i64,j as i64)) {
+            if mark.contains(&(i as i64, j as i64)) {
+                print!("X ");
+            }else if hull.contains(&(i as i64,j as i64)) {
                 print!("# ");
             } else {
                 print!(". ");
